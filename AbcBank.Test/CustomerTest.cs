@@ -10,13 +10,14 @@ namespace AbcBank.Test
     [TestFixture]
     public class CustomerTest
     {
+        private static readonly double DOUBLE_DELTA = 1e-15;
 
         [Test] //Test customer statement generation
         public void testApp()
         {
 
-            Account checkingAccount = new Account(Account.CHECKING);
-            Account savingsAccount = new Account(Account.SAVINGS);
+            Account checkingAccount = new Account(Account.AccountType.CHECKING);
+            Account savingsAccount = new Account(Account.AccountType.SAVINGS);
 
             Customer henry = new Customer("Henry").openAccount(checkingAccount).openAccount(savingsAccount);
 
@@ -41,26 +42,86 @@ namespace AbcBank.Test
         [Test]
         public void testOneAccount()
         {
-            Customer oscar = new Customer("Oscar").openAccount(new Account(Account.SAVINGS));
+            Customer oscar = new Customer("Oscar").openAccount(new Account(Account.AccountType.SAVINGS));
             Assert.AreEqual(1, oscar.getNumberOfAccounts());
         }
 
         [Test]
-        public void testTwoAccount()
+        public void testTwoAccounts()
         {
             Customer oscar = new Customer("Oscar")
-                    .openAccount(new Account(Account.SAVINGS));
-            oscar.openAccount(new Account(Account.CHECKING));
+                    .openAccount(new Account(Account.AccountType.SAVINGS));
+            oscar.openAccount(new Account(Account.AccountType.CHECKING));
             Assert.AreEqual(2, oscar.getNumberOfAccounts());
         }
 
-        [Ignore]
-        public void testThreeAcounts()
+        [Test]
+        public void testThreeAccounts()
         {
             Customer oscar = new Customer("Oscar")
-                    .openAccount(new Account(Account.SAVINGS));
-            oscar.openAccount(new Account(Account.CHECKING));
+                    .openAccount(new Account(Account.AccountType.SAVINGS));
+            oscar.openAccount(new Account(Account.AccountType.CHECKING));
+            oscar.openAccount(new Account(Account.AccountType.MAXI_SAVINGS));
             Assert.AreEqual(3, oscar.getNumberOfAccounts());
+        }
+
+        [Test]
+        public void transferMoney()
+        {
+
+            Account checkingAccount = new Account(Account.AccountType.CHECKING);
+            Account savingsAccount  = new Account(Account.AccountType.SAVINGS);
+            Account maxAccount      = new Account(Account.AccountType.MAXI_SAVINGS);
+
+            Customer bill = new Customer("Bill");
+            bill.openAccount(checkingAccount);
+            bill.openAccount(savingsAccount);
+            bill.openAccount(maxAccount);
+
+            checkingAccount.deposit(100.00);
+            savingsAccount.deposit(100.00);
+            bill.transferMoney(Account.AccountType.SAVINGS, Account.AccountType.CHECKING, 75.00);
+
+            Assert.AreEqual(175.00, checkingAccount.sumTransactions(), DOUBLE_DELTA);
+        }
+
+        [Test]
+        public void duplicateAccount()
+        {
+
+            Account checkingAccount = new Account(Account.AccountType.CHECKING);
+            Account savingsAccount = new Account(Account.AccountType.SAVINGS);
+            Account maxAccount = new Account(Account.AccountType.MAXI_SAVINGS);
+
+            Customer bill = new Customer("Bill");
+            bill.openAccount(checkingAccount);
+            bill.openAccount(savingsAccount);
+            bill.openAccount(maxAccount);
+
+            try
+            {
+                bill.openAccount(checkingAccount);
+                Assert.Fail();   // should of got an exception
+            }
+            catch
+            {
+                //Assert.Pass();
+            }
+        }
+
+        [Test]
+        public void checkStatement()
+        {
+            Account checkingAccount = new Account(Account.AccountType.CHECKING);
+            Account savingsAccount = new Account(Account.AccountType.SAVINGS);
+
+            Customer bill = new Customer("Bill");
+            bill.openAccount(checkingAccount);
+
+            checkingAccount.deposit(100.00);
+
+            Assert.AreEqual("Statement for Bill\n\nChecking Account\n  deposit $100.00\nTotal $100.00\n\nTotal In All Accounts $100.00",
+                bill.getStatement());
         }
     }
 }

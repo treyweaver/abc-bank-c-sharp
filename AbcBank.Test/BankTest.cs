@@ -11,13 +11,25 @@ namespace AbcBank.Test
     public class BankTest
     {
         private static readonly double DOUBLE_DELTA = 1e-15;
+        [Test]
+        public void addCustomers()
+        {
+            Bank bank = new Bank();
+            Assert.AreEqual(0, bank.getNumberOfCustomers());
+            Assert.AreEqual("", bank.getFirstCustomer());
+            Customer trey = new Customer("trey");
+            bank.addCustomer(trey);
+            Assert.AreEqual(1, bank.getNumberOfCustomers());
+            Assert.AreEqual("trey", bank.getFirstCustomer());
+        }
+            
 
         [Test]
         public void customerSummary()
         {
             Bank bank = new Bank();
             Customer john = new Customer("John");
-            john.openAccount(new Account(Account.CHECKING));
+            john.openAccount(new Account(Account.AccountType.CHECKING));
             bank.addCustomer(john);
 
             Assert.AreEqual("Customer Summary\n - John (1 account)", bank.customerSummary());
@@ -27,7 +39,7 @@ namespace AbcBank.Test
         public void checkingAccount()
         {
             Bank bank = new Bank();
-            Account checkingAccount = new Account(Account.CHECKING);
+            Account checkingAccount = new Account(Account.AccountType.CHECKING);
             Customer bill = new Customer("Bill").openAccount(checkingAccount);
             bank.addCustomer(bill);
 
@@ -40,10 +52,10 @@ namespace AbcBank.Test
         public void savings_account()
         {
             Bank bank = new Bank();
-            Account checkingAccount = new Account(Account.SAVINGS);
-            bank.addCustomer(new Customer("Bill").openAccount(checkingAccount));
+            Account savingsAccount = new Account(Account.AccountType.SAVINGS);
+            bank.addCustomer(new Customer("Bill").openAccount(savingsAccount));
 
-            checkingAccount.deposit(1500.0);
+            savingsAccount.deposit(1500.0);
 
             Assert.AreEqual(2.0, bank.totalInterestPaid(), DOUBLE_DELTA);
         }
@@ -52,12 +64,13 @@ namespace AbcBank.Test
         public void maxi_savings_account()
         {
             Bank bank = new Bank();
-            Account checkingAccount = new Account(Account.MAXI_SAVINGS);
-            bank.addCustomer(new Customer("Bill").openAccount(checkingAccount));
+            Account maxAccount = new Account(Account.AccountType.MAXI_SAVINGS);
+            bank.addCustomer(new Customer("Bill").openAccount(maxAccount));
 
-            checkingAccount.deposit(3000.0);
+            maxAccount.deposit(3000.0);
 
-            Assert.AreEqual(170.0, bank.totalInterestPaid(), DOUBLE_DELTA);
+            // only three because the deposit was today.
+            Assert.AreEqual(3.0, bank.totalInterestPaid(), DOUBLE_DELTA);
         }
 
     }

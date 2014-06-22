@@ -24,9 +24,50 @@ namespace AbcBank
 
         public Customer openAccount(Account account)
         {
+            foreach (Account a in accounts)
+            {
+                if (a.getAccountType() == account.getAccountType())
+                {
+                    throw new ArgumentException("account type already exist for this customer");
+                }
+            }
             accounts.Add(account);
             return this;
         }
+
+        public void transferMoney(Account.AccountType withdrawAccountType, Account.AccountType depositAccountType, double amount)
+        {
+            if (amount <= 0)
+                throw new ArgumentException("value of transfer must be greather than zero");
+
+            Account withdrawAccount = getAccount(withdrawAccountType);
+            if (withdrawAccount == null)
+                throw new ArgumentException("withdraw account not found");
+            Account depositAccount = getAccount(depositAccountType);
+            if (depositAccount == null)
+                throw new ArgumentException("deposit account not found");
+
+            try
+            {
+                withdrawAccount.withdraw(amount);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("not enough money in withdraw account");
+            }
+            depositAccount.deposit(amount);
+        }
+
+        private Account getAccount(Account.AccountType accountType)
+        {
+            foreach (Account a in accounts)
+            {
+                if (a.getAccountType() == accountType)
+                    return a;
+            }
+            return null;
+        }
+
 
         public int getNumberOfAccounts()
         {
@@ -46,52 +87,17 @@ namespace AbcBank
          *********************************/
         public String getStatement()
         {
-            //JIRA-123 Change by Joe Bloggs 29/7/1988 start
-            String statement = null; //reset statement to null here
-            //JIRA-123 Change by Joe Bloggs 29/7/1988 end
-            statement = "Statement for " + name + "\n";
+            StringBuilder  sb = new StringBuilder("Statement for " + name + "\n");
             double total = 0.0;
             foreach (Account a in accounts)
             {
-                statement += "\n" + statementForAccount(a) + "\n";
-                total += a.sumTransactions();
+                sb.Append("\n" + a.getStatement() + "\n");
+                total += a.sumTransactions(); 
             }
-            statement += "\nTotal In All Accounts " + toDollars(total);
-            return statement;
-        }
+            sb.Append("\nTotal In All Accounts " + Utils.toDollars(total));
+            string s = sb.ToString();
+            return sb.ToString();
 
-        private String statementForAccount(Account a)
-        {
-            String s = "";
-
-            //Translate to pretty account type
-            switch (a.getAccountType())
-            {
-                case Account.CHECKING:
-                    s += "Checking Account\n";
-                    break;
-                case Account.SAVINGS:
-                    s += "Savings Account\n";
-                    break;
-                case Account.MAXI_SAVINGS:
-                    s += "Maxi Savings Account\n";
-                    break;
-            }
-
-            //Now total up all the transactions
-            double total = 0.0;
-            foreach (Transaction t in a.transactions)
-            {
-                s += "  " + (t.amount < 0 ? "withdrawal" : "deposit") + " " + toDollars(t.amount) + "\n";
-                total += t.amount;
-            }
-            s += "Total " + toDollars(total);
-            return s;
-        }
-
-        private String toDollars(double d)
-        {
-            return String.Format("${0:N2}", Math.Abs(d));
         }
     }
 }
